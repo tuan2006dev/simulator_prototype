@@ -1,0 +1,39 @@
+import assert from 'node:assert/strict';
+import {createServer} from 'node:http';
+import {readFile,mkdir,writeFile} from 'node:fs/promises';
+import path from 'node:path';
+import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url),{chromium}=require(process.env.PLAYWRIGHT_MODULE??'playwright');const root=path.resolve('web');
+const server=createServer(async(req,res)=>{const file=path.resolve(root,'.'+new URL(req.url??'/','http://localhost').pathname.replace(/\/$/,'/index.html'));if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}try{res.setHeader('content-type',({'.html':'text/html','.css':'text/css','.js':'text/javascript','.svg':'image/svg+xml','.png':'image/png'} as Record<string,string>)[path.extname(file)]??'application/octet-stream');res.end(await readFile(file));}catch{res.writeHead(404).end();}});
+async function main(){
+ await mkdir('artifacts',{recursive:true});await new Promise<void>(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({channel:'msedge',headless:true}),page=await browser.newPage({viewport:{width:1440,height:1000}}),errors:string[]=[],failed:string[]=[];page.on('pageerror',(e:Error)=>errors.push(e.message));page.on('response',(r:any)=>{if(r.status()>=400)failed.push(r.url());});const url=`http://127.0.0.1:${(server.address() as {port:number}).port}`;
+ const close=async()=>{if(await page.locator('#building-inspector').isVisible())await page.locator('#bi-close').click();if(await page.locator('#panel-overlay').evaluate((e:HTMLElement)=>e.classList.contains('open')))await page.locator('#panel-close').click();};
+ const pause=async(on:boolean)=>{await close();if((await page.locator('#btn-pause').evaluate((e:HTMLElement)=>e.classList.contains('active')))!==on)await page.locator('#btn-pause').click();};
+ const save=async()=>{await close();await page.locator('#btn-save-local').click();return page.evaluate(()=>JSON.parse(localStorage.getItem('dao_thien_nguyen_v2')!));};
+ const load=async(raw:string)=>{await page.goto(url);await page.evaluate((raw:string)=>localStorage.setItem('dao_thien_nguyen_v2',raw),raw);await page.reload();await page.locator('#btn-resume-game').click();await page.locator('.era-roadmap').waitFor();await pause(true);};
+ const open=async()=>{await close();await page.locator('#sb-quests').click();await page.locator('.era-roadmap').waitFor();await page.waitForTimeout(300);};
+ const inspect=async(id:string)=>{await close();await page.locator('#btn-build').click();await page.locator(`[data-inspect-building="${id}"]`).click();await page.locator('#building-inspector').waitFor({state:'visible'});await page.waitForTimeout(300);};
+
+
+
+
+
+ try{
+ const raw=await readFile('artifacts/tides-ready-save.json','utf8'),initial=JSON.parse(raw),route=JSON.parse(await readFile('artifacts/tides-route.json','utf8')),id=route.npcId;
+ await load(raw);await open();await page.locator('#tidal-scout-choice').selectOption(id);assert(await page.locator('#send-tidal-scout').isEnabled());await page.locator('.tidal-panel').scrollIntoViewIfNeeded();await page.screenshot({path:'artifacts/tides-preview-desktop.png'});
+ const before=await save();await open();await page.locator('#tidal-scout-choice').selectOption(id);await page.locator('#send-tidal-scout').click();const paid=await save();assert(paid.island.tides.active);assert.equal(paid.island.sharedFood,before.island.sharedFood-20);assert.equal(paid.island.tides.active.rations,20);
+ await pause(false);let mid:any,earned:any;const deadline=Date.now()+90000;
+ while(Date.now()<deadline){await page.waitForTimeout(160);const current=await save(),actor=current.island.npcs.find((n:any)=>n.id===id),onSea=current.map.causeway.tiles.some((p:any)=>p.x===actor.position.tileX&&p.y===actor.position.tileY);
+  if(onSea&&!mid){mid=current;await pause(true);await load(JSON.stringify(mid));const midActor=mid.island.npcs.find((n:any)=>n.id===id);assert(mid.map.causeway.tiles.some((p:any)=>p.x===midActor.position.tileX&&p.y===midActor.position.tileY));await writeFile('artifacts/tides-browser-midcrossing-save.json',JSON.stringify(mid));await open();await page.locator('[data-region-focus="causeway"]').click();await page.waitForTimeout(400);await page.screenshot({path:'artifacts/tides-crossing-world.png'});await load(JSON.stringify(mid));const restored=await save();assert.deepEqual(restored.island.tides,mid.island.tides);assert.deepEqual(restored.map.causeway,mid.map.causeway);await pause(false);}
+  if(current.island.tides.completed===1&&!current.island.tides.active){await pause(true);earned=await save();break;}
+ }
+ assert(mid&&earned,'full public live crossing must complete');assert.equal(earned.island.npcs.filter((n:any)=>n.isAlive).length,8);const node=(v:any)=>v.island.resources.entries.find(([k]:any)=>k===route.sourceKey)[1];assert.equal(node(earned).amount,node(initial).amount-3);assert(!earned.island.tides.active);assert.equal(earned.island.tides.completed,1);await writeFile('artifacts/tides-browser-played-save.json',JSON.stringify(earned));await open();assert((await page.locator('[data-tidal-message]').textContent())?.includes('đã đi bộ về'));await page.locator('.tidal-panel').scrollIntoViewIfNeeded();await page.screenshot({path:'artifacts/tides-returned-desktop.png'});
+ await page.setViewportSize({width:390,height:844});await page.locator('.tidal-panel').scrollIntoViewIfNeeded();await page.screenshot({path:'artifacts/tides-mobile.png'});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert((await page.locator('#send-tidal-scout').boundingBox())!.height>=42);
+ // Recall is another real paid journey, cancelled on mainland before crossing.
+ await page.setViewportSize({width:1440,height:1000});await load(raw);await open();await page.locator('#tidal-scout-choice').selectOption(id);const stock=(await save()).island.sharedFood;await open();await page.locator('#tidal-scout-choice').selectOption(id);await page.locator('#send-tidal-scout').click();await page.locator('#recall-tidal-scout').click();const called=await save();assert(called.island.tides.active.recall);assert.equal(called.island.sharedFood,stock-20);await pause(false);let returned:any;const recallDeadline=Date.now()+40000;while(Date.now()<recallDeadline){await page.waitForTimeout(350);returned=await save();if(!returned.island.tides.active)break;}await pause(true);assert(!returned.island.tides.active);assert.equal(node(returned).amount,node(initial).amount);assert(!await page.locator('#btn-pause').evaluate((e:HTMLElement)=>!e.classList.contains('active')));
+ // Separate shortage fixture has no earned inventory claim.
+ const poor=JSON.parse(raw);poor.island.sharedFood=19;await load(JSON.stringify(poor));await open();await page.locator('#tidal-scout-choice').selectOption(id);assert(await page.locator('#send-tidal-scout').isDisabled());assert.equal((await save()).island.sharedFood,19);
+ assert.deepEqual(errors,[]);assert.deepEqual(failed,[]);await writeFile('artifacts/tides-browser-result.json',JSON.stringify({publicPaidJourney:true,fee:20,actualSourceDebit:3,alive:8,tick:earned.island.tick,food:earned.island.sharedFood,stone:earned.island.stone,midcrossingReload:true,realReturnAndDelivery:true,publicRecall:true,shortageFixture:true,mobile:true,errors,failed},null,2));console.log('PASS browser public tidal scout / pay20 / walk wait gather and return / midcrossing reload / public recall / shortage / mobile / no errors.');
+ }catch(error){try{await page.screenshot({path:'artifacts/tides-ui-failure.png'});await close();await page.locator('#btn-save-local').click();const raw=await page.evaluate(()=>localStorage.getItem('dao_thien_nguyen_v2'));if(raw)await writeFile('artifacts/tides-ui-failure-save.json',raw);}catch{}throw error;}finally{await browser.close();server.close();}
+}
+main().catch(e=>{console.error(e);server.close();process.exitCode=1;});

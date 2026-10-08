@@ -1,0 +1,8 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {decodeSave,encodeSave} from '../src/core/SaveSystem';
+import {SimulationSession} from '../src/core/SimulationSession';
+for(const name of ['anomaly-ready','anomaly-paused','anomaly-entered','anomaly-quota-ready','anomaly-played']){const d=decodeSave(readFileSync(`artifacts/${name}-save.json`,'utf8'));assert.equal(d.island.npcs.filter(n=>n.isAlive).length,50);assert.deepEqual(decodeSave(encodeSave(d.island,d.map,d.config)).island.civilization,JSON.parse(JSON.stringify(d.island.civilization)));}
+const raw=readFileSync('artifacts/anomaly-played-save.json','utf8'),noProof=JSON.parse(raw);noProof.island.surveys.sites[0].foundationComplete=false;assert.throws(()=>decodeSave(JSON.stringify(noProof)),/nền tảng/);const bad=JSON.parse(raw);bad.island.buildings.find((b:any)=>b.productionQuota===0).productionQuota=1.5;assert.throws(()=>decodeSave(JSON.stringify(bad)),/Định mức/);
+for(const defect of ['fee','survey','lab']){const d=decodeSave(readFileSync('artifacts/anomaly-ready-save.json','utf8')),s=d.island,c=s.civilization!,lab=s.buildings.find(b=>b.type==='measurement_lab')!;if(defect==='fee')c.inventory.components=49;if(defect==='survey')s.surveys!.sites[2].analyzed=false;const before=JSON.stringify(c.inventory);const sim=new SimulationSession(s,d.map);assert(!sim.submit({playerId:'negative',sequence:1,command:{type:'start_branch',branch:'hightech',labId:defect==='lab'?'unknown-lab':lab.id}}).accepted);assert.equal(JSON.stringify(c.inventory),before);}
+console.log('PASS anomaly save/commands: five earned checkpoints load, outage proof0 accepted while pending, missing foundation/fractional quota rejected; missing fee/third analysis/foreign lab do not charge.');

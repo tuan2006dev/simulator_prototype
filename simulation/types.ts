@@ -12,10 +12,11 @@ export interface Needs {
 
 // ── Personality axes (−100 to +100) ──────────────────────────────────────────
 export interface Personality {
-  courage: number;   // +100 fearless fighter, −100 total coward
-  greed: number;     // +100 obsessive hoarder, −100 selfless giver
-  loyalty: number;   // +100 fiercely loyal, −100 traitor
-  piety: number;     // +100 devout, −100 atheist
+  courage: number;     // +100 fearless fighter, −100 total coward
+  greed: number;       // +100 obsessive hoarder, −100 selfless giver
+  loyalty: number;     // +100 fiercely loyal, −100 traitor
+  piety: number;       // +100 devout, −100 atheist
+  sociability: number; // +100 outgoing/extroverted, −100 reserved/introverted
 }
 
 // ── Occupation ────────────────────────────────────────────────────────────────
@@ -24,7 +25,8 @@ export type Occupation =
   | 'gatherer'    // forages for food
   | 'warrior'     // high combat skill
   | 'elder'       // boosts social/prayer outcomes
-  | 'craftsman';  // will be useful in later eras
+  | 'craftsman'   // crafting
+  | 'child';      // under 18 years old, does not work or fight
 
 // ── NPC state machine ─────────────────────────────────────────────────────────
 export type NPCStatus =
@@ -33,6 +35,7 @@ export type NPCStatus =
   | 'sleeping'
   | 'working'
   | 'chatting'
+  | 'courting'
   | 'stealing'
   | 'fighting'
   | 'fleeing'
@@ -50,13 +53,25 @@ export interface NPC {
   id: string;
   name: string;
   age: number;
+  gender: 'male' | 'female';
   needs: Needs;
   personality: Personality;
   occupation: Occupation;
   status: NPCStatus;
   isAlive: boolean;
-  privateFood: number;   // personal food stash (can be stolen)
+  privateFood: number;          // personal food stash (can be stolen)
   lastAction: string;
+  // ── Romance & Reproduction ───────────────────────────────────────────────────
+  partnerId: string | null;     // ID of married partner, or null
+  motherId: string | null;      // ID of mother, or null if generation 0
+  fatherId: string | null;      // ID of father, or null if generation 0
+  isPregnant: boolean;          // true if currently carrying a baby
+  pregnancyDaysLeft: number;    // countdown days until birth
+  // ── Balance v2 ───────────────────────────────────────────────────────────────
+  attackCooldowns: Map<string, number>;  // victimId → ticks of cooldown remaining
+  stealCooldowns: Map<string, number>;   // victimId → ticks of steal cooldown remaining
+  hungerTicks: number;                   // consecutive ticks at hunger ≥ 95 (→ starvation)
+  attacksThisDay: number;                // attacks performed in current 10-tick day window
 }
 
 // ── Island ────────────────────────────────────────────────────────────────────

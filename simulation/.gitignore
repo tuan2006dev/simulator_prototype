@@ -1,0 +1,11 @@
+node_modules/
+artifacts/
+.vercel/
+.netlify/
+.deployment/
+.env
+.env.*
+!.env.example
+web/game.js
+web/game.js.map
+*.log

@@ -1,0 +1,128 @@
+import assert from 'node:assert/strict';
+import { createServer } from 'node:http';
+import { readFile, mkdir } from 'node:fs/promises';
+import path from 'node:path';
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE ?? 'playwright');
+const root = path.resolve('web');
+const server = createServer(async (req,res)=>{
+ const file=path.resolve(root,'.'+new URL(req.url??'/','http://localhost').pathname.replace(/\/$/,'/index.html'));
+ if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}
+ try{res.setHeader('content-type',({'.html':'text/html','.css':'text/css','.js':'text/javascript','.svg':'image/svg+xml'} as Record<string,string>)[path.extname(file)]??'application/octet-stream');res.end(await readFile(file));}catch{res.writeHead(404).end();}
+});
+async function main(){
+ await new Promise<void>(resolve=>server.listen(0,'127.0.0.1',resolve));
+ const browser=await chromium.launch({channel:'msedge',headless:true});
+ const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors:string[]=[];
+ page.on('pageerror',(error:Error)=>errors.push(error.message));
+ page.on('dialog', async (dialog:any)=>{errors.push('Unexpected dialog: '+dialog.message());await dialog.dismiss();});
+ const url=`http://127.0.0.1:${(server.address() as {port:number}).port}`;
+ const resume=async(file:string)=>{
+   const raw=await readFile(file,'utf8');
+   await page.goto(url);await page.evaluate((raw:string)=>localStorage.setItem('dao_thien_nguyen_v2',raw),raw);
+   await page.reload();await page.locator('#btn-resume-game').click();
+   await page.locator('.era-roadmap').waitFor();await page.waitForTimeout(700);
+ };
+ try{
+  await mkdir('artifacts',{recursive:true});
+  await resume('artifacts/stone-ready-save.json');
+  assert.equal(await page.locator('#era-badge').innerText(),'Đồ Đá');
+  assert(await page.locator('#btn-develop-era').isEnabled());
+  assert.match(await page.locator('.era-roadmap').innerText(),/Hiện Đại/);assert.match(await page.locator('.era-roadmap').innerText(),/Dị Tượng/);
+  await page.screenshot({path:'artifacts/era-stone-ready.png'});
+  const wood=Number(await page.locator('#stat-wood').innerText());
+  await page.locator('#btn-develop-era').click();
+  assert(await page.locator('#btn-develop-era').isDisabled());
+  await page.waitForFunction((before:number)=>Number(document.querySelector('#stat-wood')?.textContent)===before-40,wood);
+  await page.locator('#panel-close').click();await page.locator('#btn-save-local').click();
+  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('dao_thien_nguyen_v2')!));
+  assert.equal(saved.island.civilization.transition.workTicks,0);
+  await page.reload();await page.locator('#btn-resume-game').click();await page.locator('#era-transition-status').waitFor();
+  assert.match(await page.locator('#era-transition-status').innerText(),/0\/20/);
+  await page.locator('#panel-close').click();await page.locator('.speed-btn[data-speed="2"]').click();
+  await page.waitForFunction(()=>document.querySelector('#era-badge')?.textContent==='Đồ Đồng',undefined,{timeout:20000});
+  await page.locator('#btn-pause').click();await page.locator('#era-badge').click();
+  assert(await page.locator('#btn-develop-era').isDisabled(),'Iron progression must require its population/research/economy conditions');
+  await page.screenshot({path:'artifacts/era-bronze-unlocked.png'});
+  await page.locator('#panel-close').click();await page.locator('#btn-build').click();
+  assert.equal(await page.locator('.build-texture').count(),25);
+  assert(!(await page.locator('[data-build="copper_mine"]').getAttribute('class'))?.includes('unaffordable'));
+  assert.match(await page.locator('[data-build="smelter"]').innerText(),/Cần nghiên cứu Luyện đồng/);
+  await page.waitForFunction(()=>[...document.querySelectorAll<HTMLImageElement>('.build-texture')].every(img=>img.complete&&img.naturalWidth>0));
+  await page.screenshot({path:'artifacts/bronze-catalogue.png'});
+  await page.locator('#panel-close').click();await page.locator('#btn-research').click();
+  await page.locator('[data-tech="copper_smelting"] .tc-research-btn').click();
+  assert(await page.locator('#research-worker').isVisible());
+  await page.locator('#panel-close').click();await page.locator('#btn-save-local').click();
+  await page.reload();await page.locator('#btn-resume-game').click();await page.locator('.era-roadmap').waitFor();
+  await page.locator('#panel-close').click();await page.locator('#btn-research').click();
+  assert.match(await page.locator('.research-active').innerText(),/Luyện đồng/);
+  const replacement=await page.locator('#research-worker option').last().getAttribute('value');
+  await page.locator('#research-worker').selectOption(replacement);
+  await page.screenshot({path:'artifacts/bronze-research.png'});
+
+  // Continue from the actual core-playthrough state, before the first Bronze upgrade.
+  await resume('artifacts/bronze-before-upgrade-save.json');
+  await page.locator('#panel-close').click();await page.locator('#btn-build').click();
+  const houseButton=page.locator('[data-inspect-building]').filter({hasText:'Nhà ở'});await houseButton.click();
+  assert(await page.locator('#bi-upgrade').isEnabled());
+  const copperBefore=Number(await page.locator('#stat-copper').innerText());
+  await page.locator('#bi-upgrade').click();
+  assert(await page.locator('#bi-upgrade').isDisabled());
+  await page.waitForFunction((before:number)=>Number(document.querySelector('#stat-copper')?.textContent)===before-5,copperBefore);
+  const worker=await page.locator('#bi-select-npc option').last().getAttribute('value');
+  await page.locator('#bi-select-npc').selectOption(worker);await page.locator('#bi-btn-assign').click();
+  await page.locator('#bi-close').click();await page.locator('.speed-btn[data-speed="2"]').click();
+  await page.locator('#btn-build').click();await page.locator('[data-inspect-building]').filter({hasText:'Nhà ở'}).click();
+  await page.waitForFunction(()=>document.querySelector('.bi-level')?.textContent?.includes('Cấp 2'),undefined,{timeout:35000});
+  await page.locator('#bi-close').click();await page.locator('#btn-pause').click();await page.locator('#btn-build').click();await page.locator('[data-inspect-building]').filter({hasText:'Nhà ở'}).click();
+  assert.match(await page.locator('.bi-level').innerText(),/Đồ Đồng/);
+  assert.match(await page.locator('.bi-texture').getAttribute('src'),/house-bronze-2.svg/);
+  assert(await page.locator('#bi-upgrade').isDisabled());
+  await page.waitForFunction(()=>{const img=document.querySelector<HTMLImageElement>('.bi-texture');return img?.complete&&img.naturalWidth>0;});
+  await page.waitForTimeout(300);
+  await page.screenshot({path:'artifacts/bronze-house-upgraded.png'});
+  await page.locator('#bi-close').click();await page.locator('#btn-build').click();
+  await page.locator('[data-build="sawmill"]').click();
+  const box=await page.locator('#game-canvas').boundingBox();
+  const zoom=Math.min(box.width/320,box.height/320)*.88;
+  await page.mouse.click(box.x+box.width/2+(9-10+.5)*16*zoom,box.y+box.height/2+(14-10+.5)*16*zoom);
+  await page.locator('#building-inspector').waitFor({state:'visible'});
+  assert.match(await page.locator('.bi-header').innerText(),/Xưởng gỗ/);
+  const newWorker=await page.locator('#bi-select-npc option').last().getAttribute('value');
+  await page.locator('#bi-select-npc').selectOption(newWorker);await page.locator('#bi-btn-assign').click();
+  await page.locator('#bi-close').click();await page.locator('.speed-btn[data-speed="2"]').click();
+  await page.locator('#btn-build').click();await page.locator('[data-inspect-building]').filter({hasText:'Xưởng gỗ'}).last().click();
+  await page.waitForFunction(()=>document.querySelector('.bi-state')?.textContent?.includes('gỗ xẻ'),undefined,{timeout:30000});
+  await page.locator('#bi-close').click();await page.locator('#btn-pause').click();
+  await page.locator('#btn-build').click();await page.locator('[data-inspect-building]').filter({hasText:'Xưởng gỗ'}).last().click();
+  await page.waitForTimeout(300);await page.screenshot({path:'artifacts/bronze-sawmill-producing.png'});
+  await page.locator('#bi-close').click();await page.locator('#btn-save-local').click();
+  const stockBefore=await page.locator('#stat-copper').innerText();
+  await page.reload();await page.locator('#btn-resume-game').click();await page.locator('.era-roadmap').waitFor();
+  await page.waitForFunction((stock:string)=>document.querySelector('#stat-copper')?.textContent===stock,stockBefore);
+  await page.locator('#panel-close').click();await page.locator('#btn-build').click();
+  assert.match(await page.locator('[data-inspect-building]').filter({hasText:'Nhà ở'}).innerText(),/Cấp 2/);
+  await page.locator('#panel-close').click();await page.locator('#btn-creatures').click();await page.locator('[data-creature="settler"]').click();
+  const restoredBox=await page.locator('#game-canvas').boundingBox(),restoredZoom=Math.min(restoredBox.width/320,restoredBox.height/320)*.88;
+  await page.mouse.click(restoredBox.x+restoredBox.width/2+(15-10+.5)*16*restoredZoom,restoredBox.y+restoredBox.height/2+(14-10+.5)*16*restoredZoom);
+  await page.waitForFunction(()=>document.querySelector('#stat-pop')?.textContent==='13');
+  await page.locator('#btn-save-local').click();
+  const ids=await page.evaluate(()=>JSON.parse(localStorage.getItem('dao_thien_nguyen_v2')!).island.npcs.map((n:any)=>n.id));
+  assert.equal(new Set(ids).size,13,'New settlers must retain unique ids after reload');
+  await page.locator('#btn-build').click();
+  await page.setViewportSize({width:390,height:844});
+  assert.equal(await page.locator('#panel-body').evaluate((el:HTMLElement)=>el.scrollWidth>el.clientWidth),false,'Bronze catalogue mobile overflow');
+  await page.waitForTimeout(300);
+  await page.screenshot({path:'artifacts/bronze-mobile.png'});
+  await page.locator('#panel-close').click();await page.locator('#era-badge').click();
+  assert.equal(await page.locator('#panel-body').evaluate((el:HTMLElement)=>el.scrollWidth>el.clientWidth),false,'Era panel mobile overflow');
+  await page.waitForTimeout(300);
+  await page.screenshot({path:'artifacts/era-mobile.png'});
+  assert.deepEqual(errors,[]);
+  console.log('PASS: browser Stone→Bronze, conditions/button/payment, reload in transition, future locks, 15 textures, Bronze upgrade with goods/workers, save/restore stocks/levels, desktop/mobile and zero runtime errors.');
+ }catch(error){await page.screenshot({path:'artifacts/era-browser-failure.png'});console.error(await page.locator('body').innerText());throw error;}
+ finally{await browser.close();await new Promise<void>(resolve=>server.close(()=>resolve()));}
+}
+void main().catch(e=>{console.error(e);process.exitCode=1;server.close();});

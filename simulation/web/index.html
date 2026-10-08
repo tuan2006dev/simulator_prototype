@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Đảo Thiên Nguyên — Strategy Settlement & Social Simulation" />
+  <title>Đảo Thiên Nguyên</title>
+  <link rel="icon" type="image/svg+xml" href="assets/icons/island.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="reference-ui.css" />
+  <link rel="stylesheet" href="game-icons.css" />
+</head>
+<body>
+
+  <!-- ══════════ TOP BAR ══════════ -->
+  <header id="hud-top">
+
+    <!-- Brand: Island icon + name + era -->
+    <div id="island-brand">
+      <div class="brand-emblem">🏝️</div>
+      <div class="brand-text">
+        <div class="brand-name" id="island-name">Đảo Thiên Nguyên</div>
+        <button class="brand-era" id="era-badge" title="Xem lộ trình kỷ nguyên">Đồ Đá</button>
+      </div>
+    </div>
+
+    <!-- Resource chips -->
+    <div id="top-resources">
+      <div class="top-chip bronze-chip" id="chip-copperOre" style="display:none"><span class="chip-icon">🔶</span><div class="chip-data"><span class="chip-val" id="stat-copperOre">0</span><span class="chip-label">Quặng đồng</span></div></div>
+      <div class="top-chip bronze-chip" id="chip-copper" style="display:none"><span class="chip-icon">🏺</span><div class="chip-data"><span class="chip-val" id="stat-copper">0</span><span class="chip-label">Đồng</span></div></div>
+      <div class="top-chip bronze-chip" id="chip-lumber" style="display:none"><span class="chip-icon">🪚</span><div class="chip-data"><span class="chip-val" id="stat-lumber">0</span><span class="chip-label">Gỗ xẻ</span></div></div>
+      <div class="top-chip bronze-chip" id="chip-clay" style="display:none"><span class="chip-icon">🟤</span><div class="chip-data"><span class="chip-val" id="stat-clay">0</span><span class="chip-label">Đất sét</span></div></div>
+      <div class="top-chip bronze-chip" id="chip-bricks" style="display:none"><span class="chip-icon">🧱</span><div class="chip-data"><span class="chip-val" id="stat-bricks">0</span><span class="chip-label">Gạch</span></div></div>
+      <div class="top-chip bronze-chip" id="chip-pottery" style="display:none"><span class="chip-icon">🏺</span><div class="chip-data"><span class="chip-val" id="stat-pottery">0</span><span class="chip-label">Đồ gốm</span></div></div>
+      <div class="top-chip bronze-chip" id="chip-wheat" style="display:none"><span class="chip-icon">🌾</span><div class="chip-data"><span class="chip-val" id="stat-wheat">0</span><span class="chip-label">Lúa mì</span></div></div>
+      <div class="top-chip" id="chip-ironOre" style="display:none"><span class="chip-icon">⛏️</span><div class="chip-data"><span class="chip-val" id="stat-ironOre">0</span><span class="chip-label">Quặng sắt</span></div></div>
+      <div class="top-chip" id="chip-coal" style="display:none"><span class="chip-icon">⚫</span><div class="chip-data"><span class="chip-val" id="stat-coal">0</span><span class="chip-label">Than đá</span></div></div>
+      <div class="top-chip" id="chip-iron" style="display:none"><span class="chip-icon">⚒️</span><div class="chip-data"><span class="chip-val" id="stat-iron">0</span><span class="chip-label">Sắt</span></div></div>
+      <div class="top-chip" id="chip-fiber" style="display:none"><span class="chip-icon">🌿</span><div class="chip-data"><span class="chip-val" id="stat-fiber">0</span><span class="chip-label">Sợi lanh</span></div></div>
+      <div class="top-chip" id="chip-cloth" style="display:none"><span class="chip-icon">🧵</span><div class="chip-data"><span class="chip-val" id="stat-cloth">0</span><span class="chip-label">Vải</span></div></div>
+      <div class="top-chip" title="Dân số đang sống">
+        <span class="chip-icon">👥</span>
+        <div class="chip-data">
+          <span class="chip-val" id="stat-pop">8</span>
+          <span class="chip-label">Dân số</span>
+        </div>
+      </div>
+      <div class="top-chip" title="Ngày hiện tại">
+        <span class="chip-icon">📅</span>
+        <div class="chip-data">
+          <span class="chip-val" id="stat-day">1</span>
+          <span class="chip-label">Ngày</span>
+        </div>
+      </div>
+      <div class="chip-sep"></div>
+      <div class="top-chip" title="Lương thực kho chung">
+        <span class="chip-icon">🍖</span>
+        <div class="chip-data">
+          <span class="chip-val" id="stat-food">0</span>
+          <span class="chip-label">Thức ăn</span>
+          <span class="chip-label" id="stat-food-days">≈ 0.0 ngày</span>
+        </div>
+      </div>
+      <div class="top-chip" title="Gỗ">
+        <span class="chip-icon">🪵</span>
+        <div class="chip-data">
+          <span class="chip-val" id="stat-wood">0</span>
+          <span class="chip-label">Gỗ</span>
+        </div>
+      </div>
+      <div class="top-chip" title="Đá">
+        <span class="chip-icon">🪨</span>
+        <div class="chip-data">
+          <span class="chip-val" id="stat-stone">0</span>
+          <span class="chip-label">Đá</span>
+        </div>
+      </div>
+      <div class="top-chip" title="Thảo dược" id="chip-herbs" style="display:none">
+        <span class="chip-icon">🌿</span>
+        <div class="chip-data">
+          <span class="chip-val" id="stat-herbs">0</span>
+          <span class="chip-label">Thảo dược</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Time + speed controls -->
+    <div id="top-right-controls">
+      <button id="btn-save-local" title="Lưu thế giới cục bộ">💾 Lưu</button><span id="save-status" role="status"></span>
+      <button id="faith-hud" title="Niềm tin và Thần lực"><span id="faith-hud-value">Niềm tin 0/300</span><small id="faith-hud-rate">+0/giây</small><span class="faith-track"><span id="faith-hud-fill"></span></span></button>
+      <div class="world-clock"><span aria-hidden="true">☀</span><time id="world-time">08:00</time></div>
+      <!-- Hidden mood bars (kept for HUD.ts compat) -->
+      <div id="mood-compact" title="Hạnh phúc / Sợ hãi">
+        <span class="mood-icon-sm">😊</span>
+        <div class="mood-bar-track"><div class="mood-bar-fill h" id="bar-happiness" style="width:50%"></div></div>
+        <span class="mood-val-sm h" id="stat-happiness">50%</span>
+        <span class="mood-sep-sm">·</span>
+        <span class="mood-icon-sm">😨</span>
+        <div class="mood-bar-track"><div class="mood-bar-fill f" id="bar-fear" style="width:20%"></div></div>
+        <span class="mood-val-sm f" id="stat-fear">20%</span>
+      </div>
+
+      <div id="speed-buttons">
+        <button id="btn-pause" class="speed-btn icon-btn" title="Tạm dừng (Space)">⏸</button>
+        <button class="speed-btn" data-speed="1" title="×1">▶</button>
+        <button class="speed-btn" data-speed="2" title="×2">⏩</button>
+        <button class="speed-btn" data-speed="4" title="×4" style="display:none">⚡</button>
+      </div>
+    </div>
+
+    <!-- Hidden gauge canvas for compat -->
+    <div id="gauge-wrapper" style="display:none">
+      <canvas id="dual-gauge" width="160" height="90"></canvas>
+    </div>
+
+  </header>
+
+  <!-- ══════════ MAIN LAYOUT ══════════ -->
+  <div id="main-layout">
+
+    <!-- LEFT SIDEBAR NAV -->
+    <nav id="left-sidebar">
+      <button class="sidebar-btn active" data-view="map" id="sb-map">
+        <span class="sb-icon">🗺️</span>
+        <span class="sb-label">Tổng quan</span>
+      </button>
+      <button class="sidebar-btn" data-view="population" id="sb-population">
+        <span class="sb-icon">👥</span>
+        <span class="sb-label">Dân cư</span>
+      </button>
+      <button class="sidebar-btn" data-view="terrain" id="sb-terrain">
+        <span class="sb-icon">🏔️</span>
+        <span class="sb-label">Địa hình</span>
+      </button>
+      <button class="sidebar-btn" data-view="resources" id="sb-resources">
+        <span class="sb-icon">📊</span>
+        <span class="sb-label">Điều hành</span>
+      </button>
+      <button class="sidebar-btn" data-view="research" id="sb-research">
+        <span class="sb-icon">📖</span>
+        <span class="sb-label">Nghiên cứu</span>
+      </button>
+      <button class="sidebar-btn" data-view="quests" id="sb-quests">
+        <span class="sb-icon">⚠️</span>
+        <span class="sb-label">Nhiệm vụ</span>
+      </button>
+    </nav>
+
+    <!-- CENTER: GAME CANVAS -->
+    <main id="game-area">
+      <canvas id="game-canvas">Trình duyệt không hỗ trợ Canvas.</canvas>
+
+      <!-- Tutorial banner -->
+      <div id="tutorial-banner" class="hidden">
+        <div class="tut-avatar">🧙‍♂️</div>
+        <div class="tut-text" id="tut-message">
+          Chào mừng đến với Đảo Thiên Nguyên! Hãy đặt 5–15 người đầu tiên để bắt đầu sinh tồn.
+        </div>
+        <button class="tut-dismiss">›</button>
+      </div>
+
+      <!-- Manual mode badge -->
+      <div id="manual-badge" style="display:none">📜 Chế độ thủ công</div>
+      <div id="settlement-status"><span id="food-reserve-warning" role="status" style="display:none"></span><span id="settlement-shelter">0 chỗ ngủ</span><span id="weather-status"></span><span id="settlement-fire">Đặt cư dân để nhóm lửa</span><span id="tide-status" role="status" style="display:none"></span></div>
+
+      <!-- Chronicle (hidden, small, corner) -->
+      <div id="chronicle-panel">
+        <div class="chronicle-header">
+          <span>📖 Biên niên sử</span>
+          <span class="chronicle-live">LIVE</span>
+        </div>
+        <div id="chronicle-log">
+          <div class="log-entry log-medium">[Ngày 1] Hòn đảo Thiên Nguyên được khai sinh…</div>
+        </div>
+      </div>
+
+      <!-- NPC Action Menu (floating, for compat) -->
+      <div id="action-menu" style="display:none"></div>
+
+    </main>
+
+    <!-- RIGHT PANEL: Inspector -->
+    <aside id="inspector-panel">
+
+      <!-- Empty state -->
+      <div id="inspector-empty">
+        <div class="empty-emoji">👆</div>
+        <p class="empty-hint">Chọn một cư dân<br>để xem thông tin</p>
+      </div>
+
+      <!-- NPC content (hidden until NPC selected) -->
+      <div id="inspector-npc" class="hidden">
+
+        <!-- NPC Header -->
+        <div class="insp-header">
+          <div class="insp-avatar-wrap">
+            <div class="insp-avatar" id="insp-avatar">🧑</div>
+          </div>
+          <div class="insp-meta">
+            <div class="insp-name" id="insp-name">An</div>
+            <div class="insp-age" id="insp-age">25 tuổi</div>
+            <div class="insp-status" id="insp-status">
+              <span class="status-dot green"></span>
+              <span id="insp-status-text">Đang chờ lệnh</span>
+            </div>
+          </div>
+          <button class="insp-close" id="inspector-close">✕</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="insp-section">
+          <div class="insp-stat-row">
+            <span class="stat-emoji">🍖</span>
+            <span class="stat-name">Đói</span>
+            <div class="stat-track"><div class="stat-fill hunger-fill" id="insp-hunger" style="width:20%"></div></div>
+            <span class="stat-pct" id="insp-hunger-pct">20%</span>
+          </div>
+          <div class="insp-stat-row">
+            <span class="stat-emoji">🛏️</span>
+            <span class="stat-name">Nghỉ ngơi</span>
+            <div class="stat-track"><div class="stat-fill rest-fill" id="insp-rest" style="width:70%"></div></div>
+            <span class="stat-pct" id="insp-rest-pct">70%</span>
+          </div>
+          <div class="insp-stat-row">
+            <span class="stat-emoji">❤️</span>
+            <span class="stat-name">Sức khoẻ</span>
+            <div class="stat-track"><div class="stat-fill health-fill" id="insp-health" style="width:100%"></div></div>
+            <span class="stat-pct" id="insp-health-pct">100%</span>
+          </div>
+        </div>
+
+        <!-- Actions grid — shown in Era 0 -->
+        <div class="insp-section" id="insp-actions-section">
+          <div class="insp-section-title">HÀNH ĐỘNG</div>
+          <div id="insp-action-grid">
+            <!-- Populated by InspectorPanel.ts -->
+          </div>
+        </div>
+
+        <!-- Personality / relationship (optional) -->
+        <div class="insp-section" id="insp-extra" style="display:none">
+          <!-- Populated by InspectorPanel.ts when has data -->
+        </div>
+
+      </div>
+    </aside>
+
+  </div><!-- end #main-layout -->
+
+  <!-- ══════════ BOTTOM TOOLBAR ══════════ -->
+  <footer id="toolbar-bottom">
+    <button class="tb-btn active" data-panel="map" id="btn-map">
+      <span class="tb-icon">🗺️</span>
+      <span class="tb-label">Bản đồ</span>
+    </button>
+    <button class="tb-btn" data-panel="build" id="btn-build">
+      <span class="tb-icon">🏗️</span>
+      <span class="tb-label">Xây dựng</span>
+    </button>
+    <button class="tb-btn" data-panel="research" id="btn-research">
+      <span class="tb-icon">📖</span>
+      <span class="tb-label">Nghiên cứu</span>
+      <span class="tb-dot"></span>
+    </button>
+    <button class="tb-btn" data-panel="military" id="btn-military">
+      <span class="tb-icon">🛡️</span>
+      <span class="tb-label">Quân sự</span>
+    </button>
+    <button class="tb-btn" data-panel="creatures" id="btn-creatures">
+      <span class="tb-icon">🐾</span>
+      <span class="tb-label">Sinh vật</span>
+    </button>
+    <button class="tb-btn" data-panel="genealogy" id="btn-genealogy">
+      <span class="tb-icon">👨‍👩‍👧</span>
+      <span class="tb-label">Gia tộc</span>
+    </button>
+    <button class="tb-btn" data-panel="settings" id="btn-settings">
+      <span class="tb-icon">⚙️</span>
+      <span class="tb-label">Tùy chọn</span>
+    </button>
+  </footer>
+
+  <!-- ══════════ MISSION CARD (floating bottom-left) ══════════ -->
+  <div id="mission-card" style="display:none">
+    <div class="mc-header">
+      <span class="mc-title">📋 Nhiệm vụ hiện tại</span>
+      <button class="mc-close" id="mc-close">✕</button>
+    </div>
+    <div class="mc-desc" id="mc-desc">Đặt 5–15 người đầu tiên để bắt đầu sinh tồn.</div>
+    <div class="mc-bar-wrap">
+      <div class="mc-bar-fill" id="mc-progress" style="width:0%"></div>
+    </div>
+    <div class="mc-fraction" id="mc-fraction">0/15</div>
+  </div>
+
+  <!-- ══════════ MINIMAP (bottom-right) ══════════ -->
+  <div id="minimap-container">
+    <div id="minimap-top">
+      <span id="minimap-compass">🧭</span>
+      <span class="minimap-label">Bản đồ <kbd>M</kbd></span>
+    </div>
+    <canvas id="minimap-canvas" width="480" height="300"></canvas>
+    <div id="minimap-zoom">
+      <button class="zoom-btn" id="btn-zoom-in">+</button>
+      <button class="zoom-btn" id="btn-zoom-out">−</button>
+    </div>
+  </div>
+
+  <!-- ══════════ PANEL MODAL (build / research / etc.) ══════════ -->
+  <div id="panel-overlay">
+    <div id="panel-modal">
+      <div id="panel-header">
+        <h2 id="panel-title">Panel</h2>
+        <button id="panel-close" class="close-btn">✕</button>
+      </div>
+      <div id="panel-body"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ TOOLTIP ══════════ -->
+  <div id="tooltip" class="tooltip hidden" role="tooltip"></div>
+
+  <!-- ══════════ START SCREEN ══════════ -->
+  <div id="start-overlay"></div>
+
+  <!-- ══════════ LOADING SCREEN ══════════ -->
+  <div id="loading-screen">
+    <div id="loading-content">
+      <div class="loading-logo">🏝️</div>
+      <h1 class="loading-title">Đảo Thiên Nguyên</h1>
+      <p class="loading-sub" id="loading-sub">Đang khởi tạo thế giới…</p>
+      <div class="loading-bar-wrapper">
+        <div class="loading-bar" id="loading-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

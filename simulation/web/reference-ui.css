@@ -1,0 +1,130 @@
+/* Reference artwork is cropped from the supplied design, not a map backdrop. */
+:root { --top-h: 84px; --t-dark: #354953; --t-mid: #657275; --c-panel: #f7f0e4; }
+* { letter-spacing: 0 !important; }
+#hud-top { background: #344e5c; box-shadow: 0 1px 0 #7ab0b7; }
+#island-brand { left: 0; top: 0; height: 100%; border: 0; border-radius: 0; background: transparent; padding: 0; gap: 22px; min-width: 320px; }
+.brand-emblem { width: 124px; height: 108px; align-self: flex-start; flex-shrink: 0; background: url('assets/reference/emblem.png') center / cover; font-size: 0 !important; border-radius: 0 0 22px 0; filter: none; }
+#island-brand .brand-name { font-size: 23px; white-space: nowrap; }
+#island-brand .brand-era { font-size: 13px; text-transform: none; margin-top: 5px; }
+#top-resources { left: 440px; right: 215px; gap: 12px; }
+.top-chip { min-width: 102px; background: #2d4653; border-color: #50616b; }
+.chip-data { flex-direction: column-reverse; }
+.chip-val { font-weight: 600; }
+.chip-label { text-transform: none; font-size: 12px; }
+#stat-food-days { display: none; }
+.chip-sep { display: none; }
+.world-clock { display: flex; align-items: center; gap: 12px; font-size: 17px; }
+.world-clock span { color: #f7d576; font-size: 36px; }
+#mood-compact { display: none; }
+#top-right-controls { gap: 20px; }
+#speed-buttons { gap: 0; }
+#speed-buttons .speed-btn { width: 38px; height: 42px; padding: 0; font-size: 22px; border: 0; background: transparent; }
+#speed-buttons .speed-btn.active { color: #f7d576; background: #263e49; }
+#left-sidebar { top: 124px; left: 20px; width: 184px; padding: 0; gap: 9px; background: transparent; backdrop-filter: none; }
+#left-sidebar .sidebar-btn { min-height: 62px; border-radius: 13px; background: #306680e8; box-shadow: none; gap: 15px; }
+#left-sidebar .sidebar-btn .sb-icon { font-size: 28px; }
+#left-sidebar .sidebar-btn .sb-label { font-size: 14px; }
+#left-sidebar .sidebar-btn.active { background: #f4d795; }
+#tutorial-banner { left: 235px; transform: none; top: 24px; width: 500px; max-width: calc(100% - 610px); border-radius: 30px; padding: 8px 16px; box-shadow: none; background: #f5f4e9ee; }
+.tut-avatar { width: 75px; height: 70px; flex-shrink: 0; background: url('assets/reference/guide.png') center / cover; font-size: 0; }
+#inspector-panel { top: 108px; width: 338px; padding: 12px; background: #f7f0e5f5; max-height: calc(100vh - 390px); border: 2px solid #eee0c9; box-shadow: 0 4px 9px #245a7333; }
+.insp-header { background: transparent; padding: 4px 8px 18px; border: 0; align-items: center; }
+.insp-avatar-wrap { width: 80px; height: 86px; border-radius: 8px; overflow: hidden; border: 0; box-shadow: none; background: #eee6d9; }
+.insp-portrait { width: 100%; height: 100%; object-fit: cover; }
+.insp-name { font-size: 23px; }
+.insp-age, .insp-status { font-size: 12px; }
+.insp-section { padding: 10px 9px; }
+.insp-sec-title { font-size: 13px; font-weight: 800; margin-bottom: 12px; }
+.stat-track { height: 12px; border-radius: 8px; }
+.stat-name, .stat-pct { font-size: 12px; }
+.insp-stat-row { margin-bottom: 11px; }
+.action-card { min-height: 47px; background: transparent; padding: 8px; font-size: 13px; font-weight: 600; }
+.insp-details summary { cursor: pointer; padding: 10px; font-size: 12px; color: #697877; }
+#toolbar-bottom { background: #f4e6cb; border: 2px solid #d9c49c; height: 86px; bottom: 18px; padding: 0 12px; }
+#toolbar-bottom .tb-btn { min-width: 112px; border-radius: 0; border-right: 1px solid #dacdaf; }
+#toolbar-bottom .tb-btn:last-child { border-right: 0; }
+#toolbar-bottom .tb-btn.active { background: #edce96; border-radius: 18px; }
+#toolbar-bottom .tb-icon { font-size: 28px; }
+#mission-card { left: 20px; width: 340px; bottom: 126px; background: #275368e8; box-shadow: none; padding: 18px; }
+.mc-title, .mc-desc { font-size: 13px; }
+#minimap-container { right: 20px; bottom: 112px; width: 274px; height: 210px; padding: 0; }
+#minimap-top { position: absolute; inset: 0 0 auto; z-index: 1; background: transparent; border: 0; color: #faf2df; pointer-events: none; }
+#minimap-canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0; }
+#minimap-zoom { position: absolute; right: 8px; bottom: 10px; display: flex; flex-direction: column; background: transparent; border: 0; padding: 0; gap: 2px; }
+.zoom-btn { width: 38px; height: 38px; font-size: 26px; background: #f6ecda; color: #456372; }
+#chronicle-panel { left: 220px; bottom: 126px; width: 170px; max-height: 85px; opacity: .85; }
+body:has(#mission-card[style*='block']) #chronicle-panel { left: 374px; }
+#start-overlay { overflow-y: auto; }
+@media (max-width: 1250px) {
+  #island-brand { min-width: 0; gap: 10px; }
+  .brand-emblem { width: 74px; height: 80px; }
+  #island-brand .brand-name { font-size: 18px; }
+  #top-resources { left: 310px; right: 200px; gap: 5px; }
+  .top-chip { min-width: 78px; padding: 7px; }
+  #left-sidebar { width: 154px; }
+  #tutorial-banner { left: 188px; max-width: calc(100% - 540px); }
+  #toolbar-bottom .tb-btn { min-width: 88px; }
+}
+@media (max-width: 900px) {
+  :root { --top-h: 112px; }
+  #island-brand { height: 58px; }
+  .brand-emblem { width: 60px; height: 58px; border-radius: 0 0 8px 0; }
+  #island-brand .brand-era { font-size: 10px; }
+  #top-right-controls { height: 58px; }
+  #top-resources { top: 60px; left: 8px; right: 8px; height: 46px; }
+  .top-chip { flex: 1; min-width: 66px; }
+  .top-chip .chip-label { display: block; font-size: 10px; }
+  #left-sidebar { top: 130px; width: 48px; left: 8px; }
+  #left-sidebar .sidebar-btn { min-height: 43px; justify-content: center; padding: 5px; }
+  #left-sidebar .sb-label { display: none; }
+  #tutorial-banner { left: 70px; top: 16px; width: calc(100% - 82px); max-width: 460px; font-size: 12px; }
+  .tut-avatar { width: 42px; height: 43px; }
+  #inspector-panel { top: 202px; right: 8px; width: min(304px, calc(100vw - 72px)); max-height: calc(100vh - 305px); }
+  #inspector-panel:not(.open) { display: none; }
+  #minimap-container { width: 150px; height: 110px; bottom: 90px; right: 8px; }
+  #mission-card { width: 205px; max-width: calc(100vw - 180px); left: 8px; bottom: 90px; padding: 10px; }
+  #toolbar-bottom { width: calc(100% - 16px); height: 70px; bottom: 8px; padding: 0 4px; border-radius: 18px; }
+  #toolbar-bottom .tb-btn { min-width: 0; flex: 1; padding: 4px 2px; }
+  #toolbar-bottom .tb-label { font-size: 10px; white-space: normal; }
+  #toolbar-bottom .tb-icon { font-size: 23px; }
+  #chronicle-panel { display: none; }
+  body:has(#inspector-panel.open) #mission-card, body:has(#inspector-panel.open) #minimap-container { visibility: hidden; }
+}
+@media (max-width: 460px) {
+  #island-brand .brand-name { font-size: 15px; }
+  #island-brand { gap: 6px; }
+  #top-right-controls { right: 5px; gap: 4px; }
+  .world-clock { display: flex; gap: 3px; font-size: 12px; }
+  .world-clock span { font-size: 16px; }
+  #speed-buttons .speed-btn { width: 27px; font-size: 18px; }
+  .chip-icon { font-size: 17px; }
+  .top-chip { padding: 5px; gap: 4px; min-width: 58px; }
+  #top-resources { gap: 3px; }
+}
+
+/* Era progression and Bronze economy */
+#era-badge { border:0; background:transparent; color:inherit; padding:0; cursor:pointer; font:inherit; text-align:left; }
+#era-badge:hover { text-decoration:underline; }
+#btn-save-local, #settings-save, #btn-develop-era, [data-era-panel] { background:#91613c; color:#fff7df; border:1px solid #704b31; border-radius:7px; padding:8px 12px; cursor:pointer; }
+#btn-save-local { padding:5px 8px; font-size:11px; white-space:nowrap; }
+#save-status { font-size:10px; max-width:90px; }
+#btn-develop-era:disabled { opacity:.5; cursor:default; }
+.era-roadmap { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; margin-bottom:16px; }
+.era-stop { padding:9px 6px; border:1px solid #c7b897; border-radius:8px; background:#f4ead6; text-align:center; font-size:12px; }
+.era-stop small { display:block; margin-top:5px; font-size:10px; }
+.era-stop.current { border:2px solid #a56b36; background:#ead4ad; }
+.era-requirement { grid-template-columns:20px minmax(0,1fr) auto auto; gap:6px; }
+.era-requirement button { padding:3px 7px; font-size:10px; }
+.goods-overview { padding:12px; border:1px solid #c9b68e; border-radius:8px; margin:12px 0; line-height:1.8; background:#f0e2c9; }
+.goods-overview small { color:#796446; }
+@media(max-width:700px) { .era-roadmap { grid-template-columns:repeat(3,minmax(0,1fr)); } .era-requirement { grid-template-columns:16px minmax(0,1fr) auto; } .era-requirement button { grid-column:2/4; justify-self:start; } #save-status { display:none; } .bronze-chip .chip-icon { display:none; } }
+#top-resources { right:400px; }
+#island-brand .brand-name { max-width:285px; overflow:hidden; text-overflow:ellipsis; }
+#top-right-controls { gap:8px; }
+body:has(#building-inspector[style*="flex"]) #inspector-panel { visibility:hidden; }
+.bi-progress { height:7px; background:#d9cfb7; border-radius:8px; overflow:hidden; }
+.research-worker { padding:12px; border:1px solid #c7b897; border-radius:8px; margin-bottom:12px; }
+.research-worker select { max-width:100%; background:#fff7e7; color:#394b48; padding:6px; margin:6px; }
+@media(max-width:1250px) { #top-resources { right:355px; } }
+@media(max-width:900px) { #top-resources { left:8px;right:8px; } #island-brand .brand-era { display:block; } #island-brand .brand-name { max-width:145px; } #top-right-controls { gap:4px; } }
+@media(max-width:460px) { #island-brand .brand-name { max-width:125px; } }

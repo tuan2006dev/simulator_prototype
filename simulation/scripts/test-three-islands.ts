@@ -1,0 +1,44 @@
+import assert from 'node:assert/strict';
+import {readFileSync,writeFileSync} from 'node:fs';
+import {generateWorldMap,regionAt,type RegionId,type WorldMap} from '../src/renderer/WorldMap';
+import {spawnResources} from '../src/renderer/ResourceSpawner';
+import {findPath} from '../src/core/pathfinding';
+import {createIsland} from '../src/core/factory';
+import {createCivilization} from '../src/core/civilization';
+import {SimulationSession,type PlayerCommand} from '../src/core/SimulationSession';
+import {initializeExploration} from '../src/core/ExplorationManager';
+import {enableSettlement} from '../src/core/settlement';
+import {initializeWorkforce} from '../src/core/workforce';
+import {initializeEquipment} from '../src/core/equipment';
+import {initializeLogistics} from '../src/core/logistics';
+import {initializeFaith} from '../src/core/FaithManager';
+import {initializeWeather} from '../src/core/WeatherManager';
+import {initializeRaids} from '../src/core/RaidManager';
+import {initializePower} from '../src/core/PowerManager';
+import {encodeSave,decodeSave} from '../src/core/SaveSystem';
+const dimensions=[[50,35],[80,50],[120,80]];
+const seeds=[1,2,3,42,321,20810,999999,...Array.from({length:13},(_,i)=>10000+i*7919)];
+const land=(m:WorldMap,id:RegionId)=>m.landTiles.filter(p=>regionAt(m,p.x,p.y)?.id===id);
+function shores(m:WorldMap,id:RegionId){return land(m,id).filter(p=>[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>['shallow_water','deep_water'].includes(m.tiles[p.y+dy]?.[p.x+dx])));}
+let worlds=0,minGap=Infinity,maxGap=0;const samples:any[]=[];
+for(const [w,h] of dimensions)for(const seed of seeds){
+ const m=generateWorldMap(w,h,seed,'three-islands'),a=m.archipelago!,res=spawnResources(m,seed);assert.equal(a.islands.length,3);assert(a.regions instanceof Map);assert(new Set(a.islands.map(r=>r.seed)).size===3);assert(m.width<=500&&m.height<=500);assert(a.islands.every(r=>r.bounds.x>=1&&r.bounds.y>=1&&r.bounds.x+r.bounds.width<m.width&&r.bounds.y+r.bounds.height<m.height));
+ const primary=a.islands[0],harmony=a.islands[1],fang=a.islands[2];assert(harmony.center.x>primary.center.x&&harmony.center.y>primary.center.y);assert(fang.center.x<primary.center.x&&fang.center.y<primary.center.y);
+ for(const r of a.islands){assert(['grass','forest','sand'].includes(m.tiles[r.landing.y][r.landing.x]));assert.equal(regionAt(m,r.landing.x,r.landing.y)!.id,r.id);const positions=land(m,r.id),seen=new Set<string>([`${r.landing.x},${r.landing.y}`]),queue=[r.landing];for(let i=0;i<queue.length;i++)for(const [dx,dy]of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){const p={x:queue[i].x+dx,y:queue[i].y+dy},key=`${p.x},${p.y}`;if(regionAt(m,p.x,p.y)?.id===r.id&&['grass','forest','sand'].includes(m.tiles[p.y]?.[p.x])&&!seen.has(key)){seen.add(key);queue.push(p);}}assert.equal(seen.size,positions.length,'walkable island must stay connected');}
+ for(const r of [harmony,fang]){let gap=Infinity;for(const p of shores(m,primary.id))for(const q of shores(m,r.id))gap=Math.min(gap,Math.hypot(p.x-q.x,p.y-q.y));assert(gap>=12&&gap<=15,JSON.stringify({seed,w,h,id:r.id,gap}));minGap=Math.min(minGap,gap);maxGap=Math.max(maxGap,gap);assert.equal(findPath(m,primary.landing.x,primary.landing.y,r.landing.x,r.landing.y),null,'no false walk across the sea');}
+ const stats=(id:RegionId)=>{const nodes=[...res].filter(([key])=>a.regions.get(key)===id);const quantity=(type:string)=>nodes.reduce((total,[,r])=>total+(r.type===type?r.amount:0),0);return {fish:quantity('fish_spot'),food:quantity('herb_patch'),stone:quantity('stone_deposit'),wood:quantity('wood_tree'),land:land(m,id).length,forest:land(m,id).filter(p=>m.tiles[p.y][p.x]==='forest').length};};
+ const mainStats=stats(primary.id),harmonyStats=stats(harmony.id),fangStats=stats(fang.id);assert(harmonyStats.fish>mainStats.fish);assert(harmonyStats.forest/harmonyStats.land>mainStats.forest/mainStats.land);assert(fangStats.food<=40&&fangStats.fish<=60);assert(fangStats.stone/fangStats.land>mainStats.stone/mainStats.land);
+ for(const type of ['herb_patch','wood_tree','stone_deposit'])assert([...res].some(([key,r])=>{const [x,y]=key.split(',').map(Number);return r.type===type&&a.regions.get(key)===primary.id&&Math.max(Math.abs(x-primary.landing.x),Math.abs(y-primary.landing.y))<=3&&findPath(m,primary.landing.x,primary.landing.y,x,y)!==null;}));
+ for(const type of ['copper_vein','clay_deposit','iron_vein','coal_deposit'])assert([...res].some(([key,r])=>r.type===type&&a.regions.get(key)===primary.id),'main island must retain its metal chain');assert([...res.keys()].every(k=>a.regions.has(k)));
+ if(seed===20810){const again=generateWorldMap(w,h,seed,'three-islands');assert.deepEqual(again,m);assert.deepEqual(spawnResources(again,seed),res);const different=generateWorldMap(w,h,seed+1,'three-islands');assert.notDeepEqual(different.tiles,m.tiles);samples.push({base:[w,h],actual:[m.width,m.height],main:mainStats,harmony:harmonyStats,fang:fangStats});}
+ worlds++;
+}
+// Legacy shapes remain identical and saved geography is not regenerated on load.
+const old=decodeSave(readFileSync('artifacts/exploration-played-save.json','utf8'));assert.deepEqual(generateWorldMap(old.map.width,old.map.height,old.config.seed,old.config.shape).tiles,old.map.tiles);assert(!old.map.archipelago);assert(!decodeSave(encodeSave(old.island,old.map,old.config)).map.archipelago);
+// A playable local main island starts from ordinary stock, earns supplies, and saves metadata.
+const config={seed:20810,shape:'three-islands' as const,size:'small' as const,startPop:8,mode:'local' as const},map=generateWorldMap(50,35,config.seed,config.shape),s=createIsland('Đảo Thiên Nguyên',8);s.resources=spawnResources(map,config.seed);s.civilization=createCivilization();s.dailyLife={campfire:null};enableSettlement(s);initializeWorkforce(s,true);initializeEquipment(s);initializeLogistics(s);initializeFaith(s);initializeWeather(s,config.seed);initializeRaids(s);initializePower(s);s.sharedFood=40;s.wood=0;s.stone=0;initializeExploration(s,map);const sim=new SimulationSession(s,map);let sequence=0;const send=(command:PlayerCommand)=>{const r=sim.submit({playerId:'three-islands-play',sequence:++sequence,command});assert(r.accepted,JSON.stringify({command,r}));};
+const regions=map.archipelago!.islands,home=regions[0].landing,positions=land(map,'thien-nguyen').filter(p=>Math.max(Math.abs(p.x-home.x),Math.abs(p.y-home.y))<=2).sort((a,b)=>Math.hypot(a.x-home.x,a.y-home.y)-Math.hypot(b.x-home.x,b.y-home.y));assert(positions.length>=8);const rejected=sim.submit({playerId:'reject-overseas',sequence:1,command:{type:'place_npc',npcId:s.npcs[0].id,tileX:regions[1].landing.x,tileY:regions[1].landing.y}});assert(!rejected.accepted);assert(!s.npcs[0].position);s.npcs.forEach((n,i)=>send({type:'place_npc',npcId:n.id,tileX:positions[i].x,tileY:positions[i].y}));
+const adults=s.npcs.filter(n=>n.age>=18);adults.forEach((n,i)=>send({type:'assign_labor',npcId:n.id,role:i===adults.length-1?'stone':i===adults.length-2?'wood':'food'}));writeFileSync('artifacts/three-islands-ready-save.json',encodeSave(s,map,config));const route={home,positions,regions,dimensions:[map.width,map.height]};writeFileSync('artifacts/three-islands-route.json',JSON.stringify(route,null,2));
+for(let i=0;i<10;i++)sim.advanceTicks(10);assert.equal(s.npcs.filter(n=>n.isAlive).length,8);assert(s.sharedFood>0);assert(s.wood>0||s.dailyLife!.campfire!.fuel!>0);assert(s.stone>0);assert(s.npcs.every(n=>!n.position||regionAt(map,n.position.tileX,n.position.tileY)?.id==='thien-nguyen'));const beforeInvite={food:s.sharedFood,wood:s.wood};assert(!sim.submit({playerId:'reject-paid-overseas',sequence:1,command:{type:'invite_settler',tileX:regions[2].landing.x,tileY:regions[2].landing.y}}).accepted);assert.equal(s.sharedFood,beforeInvite.food);assert.equal(s.wood,beforeInvite.wood);const saved=encodeSave(s,map,config),restored=decodeSave(saved);assert.deepEqual(restored.map.archipelago,map.archipelago);assert.deepEqual(restored.map.tiles,map.tiles);assert.deepEqual(restored.island.resources,s.resources);writeFileSync('artifacts/three-islands-played-save.json',saved);
+const bad=JSON.parse(saved);bad.map.archipelago.islands[1].id=bad.map.archipelago.islands[0].id;assert.throws(()=>decodeSave(JSON.stringify(bad)));const missing=JSON.parse(saved);delete missing.map.archipelago;assert.throws(()=>decodeSave(JSON.stringify(missing)));
+writeFileSync('artifacts/three-islands-core-result.json',JSON.stringify({worlds,minGap,maxGap,samples,played:{steps:100,alive:8,food:s.sharedFood,wood:s.wood,stone:s.stone,mainOnly:true,saveRoundtrip:true,legacyPreserved:true}},null,2));console.log('PASS',worlds,'worlds: three identities/child seeds/directions/connected land/shore gap/no sea walking/resource profiles/starter sources/old map/save; actual 100-step local harvest-delivery/8alive.');

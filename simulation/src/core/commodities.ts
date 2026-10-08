@@ -1,0 +1,2 @@
+import type {Commodity} from './types';
+export const COMMODITIES: Record<Commodity, string> = { copperOre: 'Quặng đồng', copper: 'Đồng', lumber: 'Gỗ xẻ', clay: 'Đất sét', bricks: 'Gạch', pottery: 'Đồ gốm', wheat: 'Lúa mì', ironOre: 'Quặng sắt', coal: 'Than đá', iron: 'Sắt', fiber: 'Sợi lanh', cloth: 'Vải', steel:'Thép',cutStone:'Đá xây',machineParts:'Bộ phận máy',components:'Linh kiện',microchips:'Vi mạch',spiritStone:'Linh thạch',spiritEssence:'Tinh chất',relicBone:'Xương cốt di tích',bloodstone:'Huyết thạch',biomatter:'Sinh chất ổn định',medicine:'Thuốc băng bó' };
